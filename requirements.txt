@@ -1,5 +1,6 @@
 numpy
 pandas
+scipy
 streamlit
 matplotlib
 decorator==5.0.9
