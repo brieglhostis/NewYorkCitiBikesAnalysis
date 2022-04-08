@@ -197,10 +197,11 @@ def plot_graph(g, color_strategy="PageRank"):
 
 st.write("## Monthly Analysis (dynamic graph)")
 
-month_graphs = {}
+month_graphs, month_data_lengths = {}, {}
 for month in possible_months:
-    month_graphs[month] = bike_network(data[data.started_at.dt.month == month],
-                                       node_position_df=node_position_df)
+    month_data = data[data.started_at.dt.month == month]
+    month_graphs[month] = bike_network(month_data, node_position_df=node_position_df)
+    month_data_lengths[month] = len(month_data)
 
 month_names = {1: "January", 2: "February", 3: "March", 4: "April", 5: "May", 6: "June",
                7: "July", 8: "August", 9: "September", 10: "October", 11: "November", 12: "December"}
@@ -213,7 +214,8 @@ else:
     month_sel = min(possible_months)
 
 text = st.empty()
-text.markdown("Month: {}".format(month_names[month_sel]))
+text.markdown("Month: {} ({} data points)".format(
+    month_names[month_sel], month_data_lengths[month_sel]))
 
 month_chart = st.altair_chart(plot_graph(month_graphs[month_sel], color_strategy=color_strategy_sel))
 
@@ -245,30 +247,32 @@ weekday_names_inv = {v: k for k, v in weekday_names.items()}
 last_months_data = data[data.started_at.dt.month.isin(list(possible_months)[-3:])]
 st.write("Limited to the following months:", ", ".join([month_names[month] for month in list(possible_months)[-3:]]))
 
-weekday_graphs = {}
+weekday_graphs, weekday_data_lengths = {}, {}
 for weekday in weekday_names.keys():
-    weekday_graphs[weekday] = bike_network(last_months_data[last_months_data.started_at.dt.dayofweek == weekday],
-                                           node_position_df=node_position_df)
+    weekday_data = last_months_data[last_months_data.started_at.dt.dayofweek == weekday]
+    weekday_graphs[weekday] = bike_network(weekday_data, node_position_df=node_position_df)
+    weekday_data_lengths[weekday] = len(weekday_data)
 
 weekday_sel = weekday_names_inv[st.select_slider("Day of the week", weekday_names.values())]
 text = st.empty()
-text.markdown("Day of the week: {} - {} data points".format(
-    weekday_names[weekday_sel], len(last_months_data[last_months_data.started_at.dt.dayofweek == weekday_sel])))
+text.markdown("Day of the week: {} ({} data points)".format(
+    weekday_names[weekday_sel], weekday_data_lengths[weekday_sel]))
 
 st.altair_chart(plot_graph(weekday_graphs[weekday_sel], color_strategy=color_strategy_sel))
 
 
 st.write("## Daily Analysis")
 
-hour_graphs = {}
+hour_graphs, hour_data_lengths = {}, {}
 for hour in range(0, 24):
-    hour_graphs[hour] = bike_network(last_months_data[last_months_data.started_at.dt.hour == hour],
-                                     node_position_df=node_position_df)
+    hour_data = last_months_data[last_months_data.started_at.dt.hour == hour]
+    hour_graphs[hour] = bike_network(hour_data, node_position_df=node_position_df)
+    hour_data_lengths[hour] = len(hour_data)
 
 hour_sel = st.slider("Hour of the day", 0, 23, 12)
 text = st.empty()
-text.markdown("Day of the week: {} - {} data points".format(
-    hour_sel, len(last_months_data[last_months_data.started_at.dt.hour == hour_sel])))
+text.markdown("Hour of the day: {}h ({} data points)".format(
+    hour_sel, hour_data_lengths[hour_sel]))
 
 st.altair_chart(plot_graph(hour_graphs[hour_sel], color_strategy=color_strategy_sel))
 
