@@ -13,8 +13,6 @@ from utils import cal_distance, node_positions, bike_network
 
 st.write("# New York’s Citi Bikes Flow Analysis")
 
-st.write("## Yearly data")
-
 
 def load_month(year=2021, month_index=1):
     month_index = str(month_index)
@@ -76,6 +74,8 @@ def load_data(year=2021, month_index=None):
 
     return df, node_positions(df)
 
+
+st.write("## Yearly Analysis")
 
 year_sel = st.slider("Year", 2021, 2022, 2021)
 
@@ -143,20 +143,21 @@ year_graph = bike_network(data, node_position_df=node_position_df)
 st.altair_chart(plot_traffic_graph(year_graph))
 
 
-st.write("## Monthly data (dynamic graph)")
+possible_color_strategies = ["PageRank", "Betweenness Centrality", "Closeness Centrality", "Eigenvector"]
+color_strategy_sel = st.sidebar.selectbox("Coloring strategy", possible_color_strategies, 0)
 
 
 @st.cache(allow_output_mutation=True)
 def plot_graph(g, color_strategy="PageRank"):
 
     if color_strategy == "PageRank":
-        node_colors = nx.algorithms.link_analysis.pagerank_alg.pagerank(g, weight="diff_time")
+        node_colors = nx.algorithms.link_analysis.pagerank_alg.pagerank(g, weight="edge_traffic")
     elif color_strategy == "Betweenness Centrality":
         node_colors = nx.betweenness_centrality(g)
     elif color_strategy == "Closeness Centrality":
         node_colors = nx.closeness_centrality(g)
     elif color_strategy == "Eigenvector":
-        node_colors = nx.eigenvector_centrality(g, max_iter=6000, weight="duration")
+        node_colors = nx.eigenvector_centrality(g, max_iter=6000, weight="edge_traffic")
     else:
         node_colors = {n: 1.0 for n in g.nodes}
     for node in node_colors.keys():
@@ -194,26 +195,27 @@ def plot_graph(g, color_strategy="PageRank"):
     return (edges + nodes).properties(width=800, height=500)
 
 
-graphs = {}
+st.write("## Monthly Analysis (dynamic graph)")
+
+month_graphs = {}
 for month in possible_months:
-    graphs[month] = bike_network(data[data.started_at.dt.month == month],
-                                 node_position_df=node_position_df)
-
-possible_color_strategies = ["PageRank", "Betweenness Centrality", "Closeness Centrality", "Eigenvector"]
-color_strategy_sel = st.sidebar.selectbox("Coloring strategy", possible_color_strategies, 0)
-
-if len(possible_months) > 1:
-    month_sel = st.select_slider("Month", possible_months)
-else:
-    month_sel = min(possible_months)
+    month_graphs[month] = bike_network(data[data.started_at.dt.month == month],
+                                       node_position_df=node_position_df)
 
 month_names = {1: "January", 2: "February", 3: "March", 4: "April", 5: "May", 6: "June",
                7: "July", 8: "August", 9: "September", 10: "October", 11: "November", 12: "December"}
+month_names_inv = {v: k for k, v in month_names.items()}
+
+if len(possible_months) > 1:
+    month_sel = month_names_inv[st.select_slider(
+        "Month", [month_names[month] for month in list(possible_months)])]
+else:
+    month_sel = min(possible_months)
+
 text = st.empty()
 text.markdown("Month: {}".format(month_names[month_sel]))
 
-# new_chart = st.altair_chart(charts[month_sel])
-new_chart = st.altair_chart(plot_graph(graphs[month_sel], color_strategy=color_strategy_sel))
+month_chart = st.altair_chart(plot_graph(month_graphs[month_sel], color_strategy=color_strategy_sel))
 
 # Add start and stop button and animate the chart over the months
 col1, col2 = st.columns(2)
@@ -227,8 +229,44 @@ if start:
     for month in possible_months:
         text.markdown("Month: {}".format(month_names[month]))
         st.session_state['month'] = month
-        new_chart.altair_chart(plot_graph(graphs[month], color_strategy=color_strategy_sel))
+        month_chart.altair_chart(plot_graph(month_graphs[month], color_strategy=color_strategy_sel))
         time.sleep(1.0)
 
 if stop and 'month' in st.session_state:
-    new_chart.altair_chart(plot_graph(graphs[st.session_state['month']], color_strategy=color_strategy_sel))
+    month_chart.altair_chart(plot_graph(month_graphs[st.session_state['month']], color_strategy=color_strategy_sel))
+
+
+st.write("## Weekly Analysis")
+
+weekday_names = {0: 'Monday', 1: 'Tuesday', 2: 'Wednesday', 3: 'Thursday',
+                 4: 'Friday', 5: 'Saturday', 6: 'Sunday'}
+weekday_names_inv = {v: k for k, v in weekday_names.items()}
+
+last_months_data = data[data.started_at.dt.month.isin(list(possible_months)[-3:])]
+
+weekday_graphs = {}
+for weekday in weekday_names.keys():
+    weekday_graphs[weekday] = bike_network(last_months_data[last_months_data.started_at.dt.dayofweek == weekday],
+                                           node_position_df=node_position_df)
+
+weekday_sel = weekday_names_inv[st.select_slider("Day of the week", weekday_names.values())]
+text = st.empty()
+text.markdown("Day of the week: {}".format(weekday_names[weekday_sel]))
+
+st.altair_chart(plot_graph(weekday_graphs[weekday_sel], color_strategy=color_strategy_sel))
+
+
+st.write("## Daily Analysis")
+
+hour_graphs = {}
+for hour in range(0, 24):
+    hour_graphs[hour] = bike_network(last_months_data[last_months_data.started_at.dt.hour == hour],
+                                     node_position_df=node_position_df)
+
+hour_sel = st.slider("Hour of the day", 0, 23, 12)
+text = st.empty()
+text.markdown("Hour of the day: {}h".format(hour_sel))
+
+st.altair_chart(plot_graph(hour_graphs[hour_sel], color_strategy=color_strategy_sel))
+
+

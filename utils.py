@@ -49,11 +49,14 @@ def bike_network(df, node_position_df=None):
 
     G = nx.from_pandas_edgelist(df, 'start_station_id', 'end_station_id', edge_attr=['diff_time', 'distance'])
 
+    edge_traffic = dict(collections.Counter(zip(df['start_station_id'].to_list(), df['end_station_id'].to_list())))
+    nx.set_edge_attributes(G, edge_traffic, "edge_traffic")
+
     # Positions
     stantions = node_positions(df) if node_position_df is None else node_position_df
     pos = stantions.to_dict()['pos']
 
-    counter_dict = dict(collections.Counter((df['start_station_id'].to_list() + df['end_station_id'].to_list())))
+    node_traffic = dict(collections.Counter((df['start_station_id'].to_list() + df['end_station_id'].to_list())))
 
     # Map "pos" atribute to nodes from pos dict
     mean_lng, std_lng = -74.04599297457915, 0.015399007166101202
@@ -66,7 +69,7 @@ def bike_network(df, node_position_df=None):
             G.nodes[node]['pos'] = ((G.nodes[node]['lng'] - mean_lng) / std_lng,
                                     (G.nodes[node]['lat'] - mean_lat) / std_lat)
             G.nodes[node]['lng_scaled'], G.nodes[node]['lat_scaled'] = G.nodes[node]['pos']
-            G.nodes[node]['traffic'] = counter_dict[node] / 2
+            G.nodes[node]['traffic'] = node_traffic[node] / 2
             G.nodes[node]['area'] = node[:2]
         except KeyError:
             pass
