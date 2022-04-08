@@ -178,7 +178,7 @@ def plot_graph(g, color_strategy="PageRank"):
         x=alt.X('lng_scaled:Q', scale=alt.Scale(domain=(-2.7, 1.5))),
         y=alt.Y('lat_scaled:Q', scale=alt.Scale(domain=(-2.0, 2.0))),
         opacity=alt.value(0.8),
-        size='traffic:Q',
+        size=alt.Size('traffic:Q', scale=alt.Scale(zero=False)),
         tooltip=[
             alt.Tooltip('name', title='Node name'),
             alt.Tooltip('lng', title='Longitude'),
@@ -243,6 +243,7 @@ weekday_names = {0: 'Monday', 1: 'Tuesday', 2: 'Wednesday', 3: 'Thursday',
 weekday_names_inv = {v: k for k, v in weekday_names.items()}
 
 last_months_data = data[data.started_at.dt.month.isin(list(possible_months)[-3:])]
+st.write("Limited to the following months:", ", ".join(list(possible_months)[-3:]))
 
 weekday_graphs = {}
 for weekday in weekday_names.keys():
@@ -251,7 +252,8 @@ for weekday in weekday_names.keys():
 
 weekday_sel = weekday_names_inv[st.select_slider("Day of the week", weekday_names.values())]
 text = st.empty()
-text.markdown("Day of the week: {}".format(weekday_names[weekday_sel]))
+text.markdown("Day of the week: {} - {} data points".format(
+    weekday_names[weekday_sel], len(last_months_data[last_months_data.started_at.dt.dayofweek == weekday_sel])))
 
 st.altair_chart(plot_graph(weekday_graphs[weekday_sel], color_strategy=color_strategy_sel))
 
@@ -265,7 +267,8 @@ for hour in range(0, 24):
 
 hour_sel = st.slider("Hour of the day", 0, 23, 12)
 text = st.empty()
-text.markdown("Hour of the day: {}h".format(hour_sel))
+text.markdown("Day of the week: {} - {} data points".format(
+    hour_sel, len(last_months_data[last_months_data.started_at.dt.hour == hour_sel])))
 
 st.altair_chart(plot_graph(hour_graphs[hour_sel], color_strategy=color_strategy_sel))
 
