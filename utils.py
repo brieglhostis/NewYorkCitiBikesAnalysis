@@ -76,3 +76,10 @@ def bike_network(df, node_position_df=None):
 
     return G
 
+
+def format_number(n):
+    if n > 1e+6:
+        return str(int(n // 1e+6)) + "m"
+    elif n > 1e+3:
+        return str(int(n // 1e+3)) + "k"
+    return str(n)

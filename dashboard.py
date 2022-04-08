@@ -8,7 +8,7 @@ import networkx as nx
 import nx_altair as nxa
 import streamlit as st
 
-from utils import cal_distance, node_positions, bike_network
+from utils import cal_distance, node_positions, bike_network, format_number
 
 
 st.write("# New York’s Citi Bikes Flow Analysis")
@@ -201,7 +201,7 @@ month_graphs, month_data_lengths = {}, {}
 for month in possible_months:
     month_data = data[data.started_at.dt.month == month]
     month_graphs[month] = bike_network(month_data, node_position_df=node_position_df)
-    month_data_lengths[month] = len(month_data)
+    month_data_lengths[month] = format_number(len(month_data))
 
 month_names = {1: "January", 2: "February", 3: "March", 4: "April", 5: "May", 6: "June",
                7: "July", 8: "August", 9: "September", 10: "October", 11: "November", 12: "December"}
@@ -251,7 +251,7 @@ weekday_graphs, weekday_data_lengths = {}, {}
 for weekday in weekday_names.keys():
     weekday_data = last_months_data[last_months_data.started_at.dt.dayofweek == weekday]
     weekday_graphs[weekday] = bike_network(weekday_data, node_position_df=node_position_df)
-    weekday_data_lengths[weekday] = len(weekday_data)
+    weekday_data_lengths[weekday] = format_number(len(weekday_data))
 
 weekday_sel = weekday_names_inv[st.select_slider("Day of the week", weekday_names.values())]
 text = st.empty()
@@ -267,7 +267,7 @@ hour_graphs, hour_data_lengths = {}, {}
 for hour in range(0, 24):
     hour_data = last_months_data[last_months_data.started_at.dt.hour == hour]
     hour_graphs[hour] = bike_network(hour_data, node_position_df=node_position_df)
-    hour_data_lengths[hour] = len(hour_data)
+    hour_data_lengths[hour] = format_number(len(hour_data))
 
 hour_sel = st.slider("Hour of the day", 0, 23, 12)
 text = st.empty()
