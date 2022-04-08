@@ -243,7 +243,7 @@ weekday_names = {0: 'Monday', 1: 'Tuesday', 2: 'Wednesday', 3: 'Thursday',
 weekday_names_inv = {v: k for k, v in weekday_names.items()}
 
 last_months_data = data[data.started_at.dt.month.isin(list(possible_months)[-3:])]
-st.write("Limited to the following months:", ", ".join(list(possible_months)[-3:]))
+st.write("Limited to the following months:", ", ".join([month_names[month] for month in list(possible_months)[-3:]]))
 
 weekday_graphs = {}
 for weekday in weekday_names.keys():
