@@ -52,6 +52,11 @@ def bike_network(df, node_position_df=None):
     edge_traffic = dict(collections.Counter(zip(df['start_station_id'].to_list(), df['end_station_id'].to_list())))
     nx.set_edge_attributes(G, edge_traffic, "edge_traffic")
 
+    distance_df = df[["start_station_id", "end_station_id", "distance"]]
+    distance_df = distance_df.groupby(["start_station_id", "end_station_id"], as_index=False).mean()
+    distance_dict = {(row["start_station_id"], row["end_station_id"]): row["distance"] for _, row in distance_df.iterrows()}
+    nx.set_edge_attributes(G, distance_dict, "distance")
+
     # Positions
     stantions = node_positions(df) if node_position_df is None else node_position_df
     pos = stantions.to_dict()['pos']
@@ -69,7 +74,7 @@ def bike_network(df, node_position_df=None):
             G.nodes[node]['pos'] = ((G.nodes[node]['lng'] - mean_lng) / std_lng,
                                     (G.nodes[node]['lat'] - mean_lat) / std_lat)
             G.nodes[node]['lng_scaled'], G.nodes[node]['lat_scaled'] = G.nodes[node]['pos']
-            G.nodes[node]['traffic'] = node_traffic[node] / 2
+            G.nodes[node]['traffic'] = node_traffic[node]
             G.nodes[node]['area'] = node[:2]
         except KeyError:
             pass

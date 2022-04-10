@@ -153,9 +153,9 @@ def plot_graph(g, color_strategy="PageRank"):
     if color_strategy == "PageRank":
         node_colors = nx.algorithms.link_analysis.pagerank_alg.pagerank(g, weight="edge_traffic")
     elif color_strategy == "Betweenness Centrality":
-        node_colors = nx.betweenness_centrality(g)
+        node_colors = nx.betweenness_centrality(g, weight="distance")
     elif color_strategy == "Closeness Centrality":
-        node_colors = nx.closeness_centrality(g)
+        node_colors = nx.closeness_centrality(g, distance='distance')
     elif color_strategy == "Eigenvector":
         node_colors = nx.eigenvector_centrality(g, max_iter=6000, weight="edge_traffic")
     else:
