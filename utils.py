@@ -52,10 +52,14 @@ def bike_network(df, node_position_df=None):
     edge_traffic = dict(collections.Counter(zip(df['start_station_id'].to_list(), df['end_station_id'].to_list())))
     nx.set_edge_attributes(G, edge_traffic, "edge_traffic")
 
-    distance_df = df[["start_station_id", "end_station_id", "distance"]]
-    distance_df = distance_df.groupby(["start_station_id", "end_station_id"], as_index=False).mean()
-    distance_dict = {(row["start_station_id"], row["end_station_id"]): row["distance"] for _, row in distance_df.iterrows()}
+    edge_features_df = df[["start_station_id", "end_station_id", "distance", "diff_time"]]
+    edge_features_df = edge_features_df.groupby(["start_station_id", "end_station_id"], as_index=False).mean()
+    distance_dict = {(row["start_station_id"], row["end_station_id"]): row["distance"]
+                     for _, row in edge_features_df.iterrows()}
+    duration_dict = {(row["start_station_id"], row["end_station_id"]): row["diff_time"]
+                     for _, row in edge_features_df.iterrows()}
     nx.set_edge_attributes(G, distance_dict, "distance")
+    nx.set_edge_attributes(G, duration_dict, "duration")
 
     # Positions
     stantions = node_positions(df) if node_position_df is None else node_position_df

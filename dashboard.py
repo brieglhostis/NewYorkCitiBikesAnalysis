@@ -155,7 +155,7 @@ def plot_graph(g, color_strategy="PageRank"):
     elif color_strategy == "Betweenness Centrality":
         node_colors = nx.betweenness_centrality(g, weight="distance")
     elif color_strategy == "Closeness Centrality":
-        node_colors = nx.closeness_centrality(g, distance='distance')
+        node_colors = nx.closeness_centrality(g, distance='duration')
     elif color_strategy == "Eigenvector":
         node_colors = nx.eigenvector_centrality(g, max_iter=6000, weight="edge_traffic")
     else:
